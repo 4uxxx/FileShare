@@ -43,6 +43,19 @@ public sealed class ShareServerService : IDisposable
         var builder = WebApplication.CreateBuilder();
         builder.Logging.ClearProviders();
         builder.WebHost.UseUrls($"http://127.0.0.1:{_configService.Config.Port}");
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            // Large, slow, or tunnel-relayed downloads can dip below Kestrel's default
+            // minimum throughput watchdog and get killed mid-transfer. This is a personal
+            // file-sharing tool behind auth, not a public API, so disable that guard.
+            options.Limits.MinResponseDataRate = null;
+            options.Limits.MinRequestBodyDataRate = null;
+
+            // ZipArchive.Dispose() writes the central directory synchronously, which Kestrel
+            // blocks by default (AllowSynchronousIO = false) and throws mid-download for the
+            // /zip endpoint. Safe to allow here: this is a small local app, not a high-scale API.
+            options.AllowSynchronousIO = true;
+        });
 
         var app = builder.Build();
 
@@ -111,10 +124,14 @@ public sealed class ShareServerService : IDisposable
             foreach (var file in Directory.EnumerateFiles(fullPath, "*", SearchOption.AllDirectories))
             {
                 var relative = Path.GetRelativePath(fullPath, file).Replace('\\', '/');
-                var entry = archive.CreateEntry(relative, CompressionLevel.Fastest);
+                // Stored (no compression): most shared files are already-compressed media/binaries,
+                // so compressing wastes CPU and creates multi-second gaps with no bytes flushed to
+                // the client, which can look like a stall over a slower relay (e.g. Tailscale Funnel).
+                var entry = archive.CreateEntry(relative, CompressionLevel.NoCompression);
                 await using var entryStream = entry.Open();
                 await using var fileStream = File.OpenRead(file);
-                await fileStream.CopyToAsync(entryStream);
+                await fileStream.CopyToAsync(entryStream, ctx.RequestAborted);
+                await ctx.Response.Body.FlushAsync(ctx.RequestAborted);
             }
         });
 

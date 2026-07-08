@@ -10,7 +10,7 @@
     <RootNamespace>FileShare</RootNamespace>
     <AssemblyName>FileShare</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.1.1</Version>
+    <Version>1.1.2</Version>
     <Company>FileShare</Company>
     <Product>FileShare</Product>
     <LangVersion>latest</LangVersion>
