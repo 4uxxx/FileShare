@@ -52,11 +52,15 @@ public sealed partial class TailscaleFunnelProvider : ITunnelProvider
         }
 
         StatusChanged?.Invoke(this, "Tailscale Funnel を有効にしています…");
-        var (exitCode, _, stdErr) = await RunAsync(exe, $"funnel --bg {localPort}", ct);
-        if (exitCode != 0)
+        var funnelResult = await RunFunnelEnableAsync(exe, localPort, ct);
+        if (!funnelResult.Ok)
         {
-            var hint = UrlRegex().Match(stdErr) is { Success: true } m ? $" ({m.Value} で有効化してください)" : string.Empty;
-            StatusChanged?.Invoke(this, $"Tailscale Funnel を有効化できませんでした{hint}。");
+            var hint = funnelResult.EnableUrl is not null ? $" 次のURLで有効化してください: {funnelResult.EnableUrl}" : string.Empty;
+            StatusChanged?.Invoke(this, $"Tailscale Funnel を有効化できませんでした。{hint}");
+            if (funnelResult.EnableUrl is not null)
+            {
+                try { Process.Start(new ProcessStartInfo(funnelResult.EnableUrl) { UseShellExecute = true }); } catch { /* best effort */ }
+            }
             return null;
         }
 
@@ -82,6 +86,51 @@ public sealed partial class TailscaleFunnelProvider : ITunnelProvider
         }
         BoundPort = null;
         PublicUrl = null;
+    }
+
+    private async Task<(bool Ok, string? EnableUrl)> RunFunnelEnableAsync(string exe, int localPort, CancellationToken ct)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = exe,
+            Arguments = $"funnel --bg {localPort}",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        using var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
+        string? enableUrl = null;
+
+        void OnLine(object? sender, DataReceivedEventArgs e)
+        {
+            if (e.Data is null) return;
+            var match = UrlRegex().Match(e.Data);
+            if (match.Success) enableUrl = match.Value;
+        }
+
+        process.OutputDataReceived += OnLine;
+        process.ErrorDataReceived += OnLine;
+        process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+
+        // `tailscale funnel --bg` keeps running/retrying when Funnel isn't enabled for the
+        // tailnet yet, rather than failing fast — bound how long we wait for it.
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, timeout.Token);
+        try
+        {
+            await process.WaitForExitAsync(linked.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            try { process.Kill(entireProcessTree: true); } catch { /* best effort */ }
+            return (false, enableUrl);
+        }
+
+        return (process.ExitCode == 0, enableUrl);
     }
 
     private async Task<bool> LoginAsync(string exe, CancellationToken ct)
