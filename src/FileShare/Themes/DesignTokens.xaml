@@ -1,0 +1,82 @@
+<!--
+    DesignTokens.xaml
+    1:1 mirror of DESIGN.md front matter (Apple HIG-inspired FileShare design system).
+    Colors, brushes, typography sizes, radii and spacing live here so every
+    view references tokens instead of hard-coded values.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- ===== Colors ===== -->
+    <Color x:Key="Color.Canvas">#FFFFFF</Color>
+    <Color x:Key="Color.CanvasParchment">#F5F5F7</Color>
+    <Color x:Key="Color.SurfacePearl">#FAFAFC</Color>
+    <Color x:Key="Color.Hairline">#E0E0E0</Color>
+    <Color x:Key="Color.DividerSoft">#F0F0F0</Color>
+
+    <Color x:Key="Color.Ink">#1D1D1F</Color>
+    <Color x:Key="Color.InkMuted80">#333333</Color>
+    <Color x:Key="Color.InkMuted48">#7A7A7A</Color>
+    <Color x:Key="Color.TextInverse">#FFFFFF</Color>
+
+    <Color x:Key="Color.Primary">#0066CC</Color>
+    <Color x:Key="Color.PrimaryHover">#0071E3</Color>
+    <Color x:Key="Color.PrimaryPress">#0058B0</Color>
+    <Color x:Key="Color.PrimarySoft">#E8F1FC</Color>
+
+    <Color x:Key="Color.Success">#2FA84F</Color>
+    <Color x:Key="Color.Warning">#D9822B</Color>
+    <Color x:Key="Color.Danger">#E0433D</Color>
+    <Color x:Key="Color.Info">#0071E3</Color>
+
+    <Color x:Key="Color.SurfaceBlack">#1D1D1F</Color>
+
+    <!-- ===== Brushes ===== -->
+    <SolidColorBrush x:Key="Brush.Canvas" Color="{StaticResource Color.Canvas}" />
+    <SolidColorBrush x:Key="Brush.CanvasParchment" Color="{StaticResource Color.CanvasParchment}" />
+    <SolidColorBrush x:Key="Brush.SurfacePearl" Color="{StaticResource Color.SurfacePearl}" />
+    <SolidColorBrush x:Key="Brush.Hairline" Color="{StaticResource Color.Hairline}" />
+    <SolidColorBrush x:Key="Brush.DividerSoft" Color="{StaticResource Color.DividerSoft}" />
+
+    <SolidColorBrush x:Key="Brush.Ink" Color="{StaticResource Color.Ink}" />
+    <SolidColorBrush x:Key="Brush.InkMuted80" Color="{StaticResource Color.InkMuted80}" />
+    <SolidColorBrush x:Key="Brush.InkMuted48" Color="{StaticResource Color.InkMuted48}" />
+    <SolidColorBrush x:Key="Brush.TextInverse" Color="{StaticResource Color.TextInverse}" />
+
+    <SolidColorBrush x:Key="Brush.Primary" Color="{StaticResource Color.Primary}" />
+    <SolidColorBrush x:Key="Brush.PrimaryHover" Color="{StaticResource Color.PrimaryHover}" />
+    <SolidColorBrush x:Key="Brush.PrimaryPress" Color="{StaticResource Color.PrimaryPress}" />
+    <SolidColorBrush x:Key="Brush.PrimarySoft" Color="{StaticResource Color.PrimarySoft}" />
+
+    <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}" />
+    <SolidColorBrush x:Key="Brush.Warning" Color="{StaticResource Color.Warning}" />
+    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}" />
+    <SolidColorBrush x:Key="Brush.Info" Color="{StaticResource Color.Info}" />
+
+    <SolidColorBrush x:Key="Brush.SurfaceBlack" Color="{StaticResource Color.SurfaceBlack}" />
+
+    <!-- ===== Typography ===== -->
+    <FontFamily x:Key="Font.Display">Segoe UI Variable Display, Segoe UI Semibold, Segoe UI, system-ui</FontFamily>
+    <FontFamily x:Key="Font.Sans">Segoe UI Variable Text, Segoe UI, system-ui</FontFamily>
+    <FontFamily x:Key="Font.Mono">Cascadia Code, Consolas, ui-monospace</FontFamily>
+
+    <sys:Double x:Key="Font.Size.Hero">32</sys:Double>
+    <sys:Double x:Key="Font.Size.Display">24</sys:Double>
+    <sys:Double x:Key="Font.Size.H1">19</sys:Double>
+    <sys:Double x:Key="Font.Size.H2">15</sys:Double>
+    <sys:Double x:Key="Font.Size.Body">14</sys:Double>
+    <sys:Double x:Key="Font.Size.Caption">12</sys:Double>
+    <sys:Double x:Key="Font.Size.LabelCaps">11</sys:Double>
+
+    <!-- ===== Radii ===== -->
+    <CornerRadius x:Key="Radius.Sm">8</CornerRadius>
+    <CornerRadius x:Key="Radius.Md">11</CornerRadius>
+    <CornerRadius x:Key="Radius.Lg">18</CornerRadius>
+    <CornerRadius x:Key="Radius.Pill">999</CornerRadius>
+
+    <!-- ===== Spacing ===== -->
+    <Thickness x:Key="Space.Card">24</Thickness>
+    <Thickness x:Key="Space.Row">0,0,0,8</Thickness>
+
+</ResourceDictionary>
