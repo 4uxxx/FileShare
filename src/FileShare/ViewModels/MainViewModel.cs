@@ -201,8 +201,9 @@ public sealed class MainViewModel : ViewModelBase
             var url = await _tunnel.StartAsync(_server.Port);
             if (url is null)
             {
+                var reason = StatusText;
                 MessageBox.Show(
-                    "インターネット公開用のトンネルに接続できませんでした。ネットワーク接続を確認して、もう一度お試しください。",
+                    $"インターネット公開用のトンネルに接続できませんでした。\n\n{reason}",
                     "FileShare", MessageBoxButton.OK, MessageBoxImage.Error);
                 await _server.StopAsync();
                 StatusText = "共有は停止中です。";

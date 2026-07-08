@@ -86,12 +86,34 @@ public sealed partial class TailscaleFunnelProvider : ITunnelProvider
 
     private async Task<bool> LoginAsync(string exe, CancellationToken ct)
     {
-        StatusChanged?.Invoke(this, "Tailscale にログインしています…");
+        StatusChanged?.Invoke(this, "Tailscale に接続しています…");
 
+        var result = await RunUpOnceAsync(exe, "up", ct);
+
+        // The device already has non-default settings (e.g. a custom hostname or
+        // unattended mode); tailscale refuses a bare "up" and instead prints the exact
+        // command to re-run. Retry with that so we don't silently reset the user's config.
+        if (!result.Ok && result.SuggestedArgs is not null)
+        {
+            StatusChanged?.Invoke(this, "既存のTailscale設定を維持して再接続しています…");
+            result = await RunUpOnceAsync(exe, result.SuggestedArgs, ct);
+        }
+
+        if (!result.Ok && !result.SawLoginUrl)
+        {
+            var detail = string.IsNullOrWhiteSpace(result.ErrorText) ? string.Empty : $": {result.ErrorText.Trim()}";
+            StatusChanged?.Invoke(this, $"Tailscale への接続に失敗しました{detail}");
+        }
+
+        return result.Ok;
+    }
+
+    private async Task<UpResult> RunUpOnceAsync(string exe, string args, CancellationToken ct)
+    {
         var psi = new ProcessStartInfo
         {
             FileName = exe,
-            Arguments = "up",
+            Arguments = args,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -99,19 +121,27 @@ public sealed partial class TailscaleFunnelProvider : ITunnelProvider
         };
 
         using var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
-        var urlShown = false;
+        var sawLoginUrl = false;
+        string? suggestedArgs = null;
+        var outputLines = new List<string>();
 
         void OnLine(object? sender, DataReceivedEventArgs e)
         {
             if (e.Data is null) return;
-            var match = LoginUrlRegex().Match(e.Data);
-            if (match.Success && !urlShown)
+            outputLines.Add(e.Data);
+
+            var urlMatch = LoginUrlRegex().Match(e.Data);
+            if (urlMatch.Success && !sawLoginUrl)
             {
-                urlShown = true;
-                var url = match.Value;
+                sawLoginUrl = true;
+                var url = urlMatch.Value;
                 StatusChanged?.Invoke(this, $"ブラウザで次のURLを開いてログインしてください: {url}");
                 try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); } catch { /* best effort */ }
             }
+
+            var trimmed = e.Data.TrimStart();
+            if (trimmed.StartsWith("tailscale up", StringComparison.OrdinalIgnoreCase))
+                suggestedArgs = trimmed["tailscale ".Length..].Trim();
         }
 
         process.OutputDataReceived += OnLine;
@@ -128,13 +158,14 @@ public sealed partial class TailscaleFunnelProvider : ITunnelProvider
         }
         catch (OperationCanceledException)
         {
-            StatusChanged?.Invoke(this, "Tailscale へのログインがタイムアウトしました。");
             try { process.Kill(entireProcessTree: true); } catch { /* best effort */ }
-            return false;
+            return new UpResult(false, suggestedArgs, sawLoginUrl, "タイムアウトしました。");
         }
 
-        return process.ExitCode == 0;
+        return new UpResult(process.ExitCode == 0, suggestedArgs, sawLoginUrl, string.Join('\n', outputLines));
     }
+
+    private sealed record UpResult(bool Ok, string? SuggestedArgs, bool SawLoginUrl, string ErrorText);
 
     private static async Task<TailscaleStatus?> GetStatusAsync(string exe, CancellationToken ct)
     {
