@@ -113,6 +113,17 @@ public sealed class MainViewModel : ViewModelBase
         }
     }
 
+    public bool CloseToTray
+    {
+        get => _config.Config.CloseToTray;
+        set
+        {
+            _config.Config.CloseToTray = value;
+            _config.Save();
+            Raise();
+        }
+    }
+
     public RelayCommand ToggleShareCommand { get; }
     public RelayCommand AddFileCommand { get; }
     public RelayCommand AddFolderCommand { get; }
@@ -250,6 +261,23 @@ public sealed class MainViewModel : ViewModelBase
 
         var kind = Directory.Exists(chip.Path) ? ShareItemKind.Folder : ShareItemKind.File;
         AddItem(chip.Path, kind);
+        RefreshQuickChips();
+    }
+
+    /// <summary>Adds a path received from the Explorer "FileShareで共有" context menu.</summary>
+    public void AddExternalPath(string path)
+    {
+        if (IsSharing)
+        {
+            MessageBox.Show("共有中はアイテムを追加できません。先に共有を停止してください。", "FileShare",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (Directory.Exists(path)) AddItem(path, ShareItemKind.Folder);
+        else if (File.Exists(path)) AddItem(path, ShareItemKind.File);
+        else return;
+
         RefreshQuickChips();
     }
 

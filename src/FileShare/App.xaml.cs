@@ -1,7 +1,10 @@
 using System.Windows;
 using FileShare.Services;
+using FileShare.Views;
 using Velopack;
 using Velopack.Sources;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace FileShare;
 
@@ -9,8 +12,18 @@ public partial class App : Application
 {
     private const string UpdateRepoUrl = "https://github.com/4uxxx/FileShare";
 
+    private readonly SingleInstanceService _singleInstance;
+    private readonly string? _pendingPath;
+    private MainWindow? _mainWindow;
+
     /// <summary>Global service container, created once at startup.</summary>
     public static AppServices Services { get; private set; } = null!;
+
+    public App(SingleInstanceService? singleInstance = null, string? pendingPath = null)
+    {
+        _singleInstance = singleInstance ?? new SingleInstanceService();
+        _pendingPath = pendingPath;
+    }
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -18,11 +31,23 @@ public partial class App : Application
         Services = new AppServices();
         Services.Load();
 
+        try { ShellIntegrationService.Register(); } catch { /* best effort */ }
+
+        _mainWindow = new MainWindow();
+        MainWindow = _mainWindow;
+        _mainWindow.Show();
+
+        _singleInstance.PathReceived += (_, path) => Dispatcher.Invoke(() => _mainWindow?.HandleExternalPath(path));
+
+        if (!string.IsNullOrEmpty(_pendingPath))
+            _mainWindow.HandleExternalPath(_pendingPath);
+
         _ = CheckForUpdatesAsync();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _singleInstance.Dispose();
         Services?.Shutdown();
         base.OnExit(e);
     }

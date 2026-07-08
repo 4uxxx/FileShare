@@ -11,6 +11,9 @@ public sealed class AppConfig
 
     public TunnelMode TunnelMode { get; set; } = TunnelMode.CloudflareQuick;
 
+    /// <summary>When true, closing the window hides it to the tray instead of exiting (sharing keeps running).</summary>
+    public bool CloseToTray { get; set; } = true;
+
     public string AuthUsername { get; set; } = "share";
 
     public string AuthPassword { get; set; } = string.Empty;

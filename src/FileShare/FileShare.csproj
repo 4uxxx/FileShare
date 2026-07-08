@@ -6,10 +6,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>FileShare</RootNamespace>
     <AssemblyName>FileShare</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Company>FileShare</Company>
     <Product>FileShare</Product>
     <LangVersion>latest</LangVersion>
@@ -17,6 +18,14 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- UseWindowsForms adds implicit global usings for System.Windows.Forms / System.Drawing,
+       which collide with WPF's System.Windows types (Application, MessageBox, Clipboard, etc.).
+       Only TrayIconService needs WinForms and references it with an explicit using. -->
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
   </ItemGroup>
 
   <ItemGroup>

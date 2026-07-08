@@ -62,6 +62,12 @@
                                      IsChecked="{Binding IsTailscaleMode}" Content="固定URL (Tailscale)" />
                     </StackPanel>
 
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0" VerticalAlignment="Center">
+                        <ToggleButton Style="{StaticResource Switch}" IsChecked="{Binding CloseToTray}" />
+                        <TextBlock Text="閉じてもバックグラウンドで共有を続ける(通知領域に常駐)"
+                                   Style="{StaticResource Text.Body}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+
                     <!-- Public URL / QR / credentials, shown only while sharing -->
                     <Border Visibility="{Binding IsSharing, Converter={StaticResource BoolToVis}}"
                             BorderBrush="{StaticResource Brush.DividerSoft}" BorderThickness="0,1,0,0"
